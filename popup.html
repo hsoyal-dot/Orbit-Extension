@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Orbit</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <div class="container">
+      <h2>Orbit</h2>
+      <label class="switch">
+        <input id="toggleCapture" type="checkbox" />
+        <span class="slider"></span>
+      </label>
+      <span id="status">Idle</span>
+
+      <hr />
+
+      <div id="detectedList" class="list"></div>
+
+      <div class="controls">
+        <select id="filterSelect">
+          <option value="all">All</option>
+          <option value="Educational">Educational</option>
+          <option value="Personal">Personal</option>
+          <option value="Event">Event</option>
+        </select>
+        <button id="exportIcsBtn">Export ICS</button>
+        <button id="syncGoogleBtn">Sync Google</button>
+      </div>
+    </div>
+
+    <script src="popup.js"></script>
+  </body>
+</html>
