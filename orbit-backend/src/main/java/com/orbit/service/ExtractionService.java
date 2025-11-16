@@ -7,26 +7,44 @@ import org.springframework.stereotype.Service;
 import com.orbit.dto.ExtractRequest;
 import com.orbit.dto.ExtractResponse;
 import com.orbit.dto.ExtractedEvent;
+import com.orbit.service.GeminiService.EventExtraction;
 
 @Service
 public class ExtractionService {
-    // For demo: mocked extraction. Replace with real LLM call.
+
+    private final GeminiService geminiService;
+
+    public ExtractionService(GeminiService geminiService) {
+        this.geminiService = geminiService;
+    }
+
     public ExtractResponse extractFromSnippet(ExtractRequest req) {
         ExtractResponse resp = new ExtractResponse();
         resp.detected = new ArrayList<>();
-        // MOCK: if snippet or title contains a YYYY- pattern, parse it (very simple)
-        if (req.snippet() != null && req.snippet().matches(".*\\d{4}-\\d{2}-\\d{2}.*")) {
-            ExtractedEvent ev = new ExtractedEvent();
-            ev.title = req.title() + " - Detected Event";
-            ev.date = req.snippet().replaceAll("(?s).*?(\\d{4}-\\d{2}-\\d{2}).*", "$1");
-            ev.time = null;
-            ev.tag = "Educational";
-            ev.confidence = 0.9;
-            ev.source_snippet = req.snippet().length() > 240 ? req.snippet().substring(0, 240) : req.snippet();
-            ev.url = req.url();
+
+        // Use Gemini AI to extract event information
+        EventExtraction extraction = geminiService.extractEventInfo(
+                req.snippet() != null ? req.snippet() : "",
+                req.title() != null ? req.title() : "",
+                req.url() != null ? req.url() : "");
+
+        // Convert to ExtractedEvent
+        ExtractedEvent ev = new ExtractedEvent();
+        ev.title = extraction.title;
+        ev.date = extraction.date;
+        ev.time = extraction.time;
+        ev.tag = extraction.tag;
+        ev.confidence = extraction.confidence;
+        ev.source_snippet = extraction.sourceSnippet != null && extraction.sourceSnippet.length() > 240
+                ? extraction.sourceSnippet.substring(0, 240)
+                : extraction.sourceSnippet;
+        ev.url = extraction.url;
+
+        // Only add if we have some confidence or a date
+        if (ev.confidence > 0.3 || ev.date != null) {
             resp.detected.add(ev);
         }
+
         return resp;
     }
-
 }
