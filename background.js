@@ -1,67 +1,137 @@
-// background.js - service worker MV3
+// background.js (MV3 service worker)
 let capturing = false;
 
-// Listen for toggle from popup
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "TOGGLE_CAPTURE") {
     capturing = !!msg.enabled;
     sendResponse({ ok: true, capturing });
-  } else if (msg.type === "PAGE_CAPTURE" && capturing) {
-    handlePageCapture(msg.payload);
-    sendResponse({ ok: true });
-  } else if (msg.type === "PAGE_LOADED" && capturing) {
-    // Optionally fetch page snippet from backend for extraction (lightweight)
-    handlePageLoad(msg.payload);
-  } else {
-    sendResponse({ ok: false });
+    return true;
   }
+
+  if (msg.type === "PAGE_CAPTURE" && capturing) {
+    handlePageCapture(msg.payload)
+      .then((resp) => sendResponse({ ok: true, resp }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true; // indicates async response
+  }
+
+  if (msg.type === "IMPORT_PAGE" && msg.payload) {
+    // directly extract on user's request
+    handlePageCapture(msg.payload)
+      .then((resp) => sendResponse({ ok: true, resp }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "SAVE_EVENT" && msg.payload) {
+    handleSaveEvent(msg.payload)
+      .then((resp) => sendResponse({ ok: true, resp }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "EXPORT_ICS") {
+    handleExportIcs()
+      .then((data) => sendResponse({ ok: true, data }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "SYNC_GOOGLE") {
+    handleSyncGoogle()
+      .then((resp) => sendResponse({ ok: true, resp }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  sendResponse({ ok: false, reason: "unknown_message" });
+  return false;
 });
 
 async function handlePageCapture(payload) {
   try {
-    // Send to backend extract endpoint
+    // send snippet to backend extract endpoint
     const resp = await fetch("http://localhost:8080/api/extract", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         url: payload.url,
         title: payload.title,
-        snippet: payload.text || payload.context,
+        snippet: payload.snippet,
       }),
     });
-    const data = await resp.json();
-    if (data && data.detected) {
-      // Send to popup (and store in chrome storage)
-      chrome.runtime.sendMessage({
-        type: "NEW_DETECTIONS",
-        detected: data.detected,
-      });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Extract failed: ${resp.status} ${text}`);
     }
+    const data = await resp.json();
+    // store locally and notify popup
+    chrome.storage.local.get(["detectedEvents"], (res) => {
+      const detected = res.detectedEvents || [];
+      const merged = (data.detected || []).concat(detected);
+      chrome.storage.local.set({ detectedEvents: merged }, () => {
+        // notify popup UI
+        chrome.runtime.sendMessage({
+          type: "NEW_DETECTIONS",
+          detected: merged,
+        });
+      });
+    });
+    return data;
   } catch (err) {
-    console.error("Extraction failed", err);
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        "Backend not reachable. Is the server running on http://localhost:8080?"
+      );
+    }
+    throw err;
   }
 }
 
-async function handlePageLoad(payload) {
+async function handleSaveEvent(payload) {
   try {
-    // Light extraction using small page context to detect prominent dates (optional)
-    const resp = await fetch("http://localhost:8080/api/extract", {
+    const resp = await fetch("http://localhost:8080/api/saveEvent", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        url: payload.url,
-        title: payload.title,
-        snippet: payload.title, // simple for speed
-      }),
+      body: JSON.stringify(payload),
     });
-    const data = await resp.json();
-    if (data && data.detected && data.detected.length) {
-      chrome.runtime.sendMessage({
-        type: "NEW_DETECTIONS",
-        detected: data.detected,
-      });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Save failed: ${resp.status} ${text}`);
     }
+    return await resp.json();
   } catch (err) {
-    console.error(err);
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        "Backend not reachable. Is the server running on http://localhost:8080?"
+      );
+    }
+    throw err;
   }
+}
+
+async function handleExportIcs() {
+  try {
+    const resp = await fetch("http://localhost:8080/api/export/ics", {
+      method: "GET",
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Export failed: ${resp.status} ${text}`);
+    }
+    return await resp.text();
+  } catch (err) {
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        "Backend not reachable. Is the server running on http://localhost:8080?"
+      );
+    }
+    throw err;
+  }
+}
+
+async function handleSyncGoogle() {
+  // TODO: Implement Google Calendar sync
+  // For now, just return success
+  return { message: "Google Calendar sync not yet implemented" };
 }
