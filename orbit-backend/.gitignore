@@ -1,10 +1,20 @@
-HELP.md
+# Compiled files
 target/
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
 
-### STS ###
+### IDEs ###
+# IntelliJ IDEA
+.idea
+*.iws
+*.iml
+*.ipr
+
+# Eclipse/STS
 .apt_generated
 .classpath
 .factorypath
@@ -13,24 +23,42 @@ target/
 .springBeans
 .sts4-cache
 
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
+# NetBeans
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# VS Code
 .vscode/
 
-# Ignoring sensitive info
+### Operating System ###
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Application ###
+# Sensitive configuration files
 src/main/resources/application.properties
+src/main/resources/application-local.properties
+src/main/resources/application-dev.properties
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+*~
+
+# HELP.md (optional, can keep if you want)
+HELP.md
