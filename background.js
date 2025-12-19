@@ -1,4 +1,14 @@
 // background.js (MV3 service worker)
+
+// Configuration - Update USE_PRODUCTION and PRODUCTION_URL before publishing
+const CONFIG = {
+  USE_PRODUCTION: false, // Set to true for Chrome Web Store release
+  PRODUCTION_URL: "https://your-backend-url.railway.app", // Update after backend deployment
+  DEVELOPMENT_URL: "http://localhost:8080"
+};
+
+const getBackendUrl = () => CONFIG.USE_PRODUCTION ? CONFIG.PRODUCTION_URL : CONFIG.DEVELOPMENT_URL;
+
 let capturing = false;
 
 chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
@@ -51,7 +61,8 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
 async function handlePageCapture(payload) {
   try {
     // send snippet to backend extract endpoint
-    const resp = await fetch("http://localhost:8080/api/extract", {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/extract`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -81,7 +92,7 @@ async function handlePageCapture(payload) {
   } catch (err) {
     if (err.message && err.message.includes("Failed to fetch")) {
       throw new Error(
-        "Backend not reachable. Is the server running on http://localhost:8080?"
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
       );
     }
     throw err;
@@ -90,7 +101,8 @@ async function handlePageCapture(payload) {
 
 async function handleSaveEvent(payload) {
   try {
-    const resp = await fetch("http://localhost:8080/api/saveEvent", {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/saveEvent`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -103,7 +115,7 @@ async function handleSaveEvent(payload) {
   } catch (err) {
     if (err.message && err.message.includes("Failed to fetch")) {
       throw new Error(
-        "Backend not reachable. Is the server running on http://localhost:8080?"
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
       );
     }
     throw err;
@@ -112,7 +124,8 @@ async function handleSaveEvent(payload) {
 
 async function handleExportIcs() {
   try {
-    const resp = await fetch("http://localhost:8080/api/export/ics", {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/export/ics`, {
       method: "GET",
     });
     if (!resp.ok) {
@@ -123,7 +136,7 @@ async function handleExportIcs() {
   } catch (err) {
     if (err.message && err.message.includes("Failed to fetch")) {
       throw new Error(
-        "Backend not reachable. Is the server running on http://localhost:8080?"
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
       );
     }
     throw err;

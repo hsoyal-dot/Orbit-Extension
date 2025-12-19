@@ -5,8 +5,8 @@
    - Sends save requests to backend for saved events
 */
 
-// Backend base URL (adjust if your backend isn't at localhost:8080)
-const BACKEND_BASE = "http://localhost:8080";
+// Import configuration (backend URL is centralized in config.js)
+// Note: Backend base URL is no longer needed here as background.js handles all API calls
 
 // --- DOM helpers ---
 const $ = (id) => document.getElementById(id);

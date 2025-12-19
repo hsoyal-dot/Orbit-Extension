@@ -1,10 +1,12 @@
 {
     "manifest_version": 3,
     "name": "Orbit - The Calendar That Builds Itself",
-    "version": "0.1.0",
-    "description": "Capture dates from pages and build a smart calendar (demo).",
+    "version": "1.0.0",
+    "description": "Capture dates from any webpage and build a smart calendar automatically with AI-powered event detection.",
     "icons": {
-      "48": "icons/icon48.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     },
     "permissions": [
       "storage",
@@ -13,7 +15,6 @@
       "activeTab"
     ],
     "host_permissions": [
-      "http://localhost:8080/*",
       "https://*/"
     ],
     "background": {
@@ -21,7 +22,11 @@
     },
     "action": {
       "default_popup": "popup.html",
-      "default_icon": "icons/icon48.png"
+      "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png",
+        "128": "icons/icon128.png"
+      }
     },
     "content_scripts": [
       {
@@ -29,8 +34,5 @@
         "js": ["content.js"],
         "run_at": "document_idle"
       }
-    ],
-    "externally_connectable": {
-      "matches": ["*://localhost/*"]
-    }
+    ]
   }
