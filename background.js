@@ -2,8 +2,8 @@
 
 // Configuration - Update USE_PRODUCTION and PRODUCTION_URL before publishing
 const CONFIG = {
-  USE_PRODUCTION: false, // Set to true for Chrome Web Store release
-  PRODUCTION_URL: "https://your-backend-url.railway.app", // Update after backend deployment
+  USE_PRODUCTION: true, // Set to true for Chrome Web Store release
+  PRODUCTION_URL: "https://orbit-extension-production.up.railway.app",
   DEVELOPMENT_URL: "http://localhost:8080"
 };
 
