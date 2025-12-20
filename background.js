@@ -2,7 +2,7 @@
 
 // Configuration - Update USE_PRODUCTION and PRODUCTION_URL before publishing
 const CONFIG = {
-  USE_PRODUCTION: true, // Set to true for Chrome Web Store release
+  USE_PRODUCTION: false, // Set to true for Chrome Web Store release
   PRODUCTION_URL: "https://orbit-extension-production.up.railway.app",
   DEVELOPMENT_URL: "http://localhost:8080"
 };
@@ -43,6 +43,27 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.type === "EXPORT_ICS") {
     handleExportIcs()
       .then((data) => sendResponse({ ok: true, data }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "GET_SAVED_EVENTS") {
+    handleGetSavedEvents()
+      .then((data) => sendResponse({ ok: true, data }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "DELETE_EVENT") {
+    handleDeleteEvent(msg.id)
+      .then((resp) => sendResponse({ ok: true, resp }))
+      .catch((err) => sendResponse({ ok: false, err: String(err) }));
+    return true;
+  }
+
+  if (msg.type === "CLEAR_ALL_EVENTS") {
+    handleClearAllEvents()
+      .then((resp) => sendResponse({ ok: true, resp }))
       .catch((err) => sendResponse({ ok: false, err: String(err) }));
     return true;
   }
@@ -147,4 +168,78 @@ async function handleSyncGoogle() {
   // TODO: Implement Google Calendar sync
   // For now, just return success
   return { message: "Google Calendar sync not yet implemented" };
+}
+
+async function handleGetSavedEvents() {
+  try {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/events`, {
+      method: "GET",
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Fetch events failed: ${resp.status} ${text}`);
+    }
+    return await resp.json();
+  } catch (err) {
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
+      );
+    }
+    throw err;
+  }
+}
+
+async function handleDeleteEvent(id) {
+  try {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/events/${id}`, {
+      method: "DELETE",
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Delete failed: ${resp.status} ${text}`);
+    }
+    // Backend returns 204 No Content on success, which has no body
+    if (resp.status === 204) {
+      return { success: true, message: "Event deleted successfully" };
+    }
+    // If there's a body, parse it
+    const text = await resp.text();
+    return text ? JSON.parse(text) : { success: true };
+  } catch (err) {
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
+      );
+    }
+    throw err;
+  }
+}
+
+async function handleClearAllEvents() {
+  try {
+    const backendUrl = getBackendUrl();
+    const resp = await fetch(`${backendUrl}/api/events/clear`, {
+      method: "POST",
+    });
+    if (!resp.ok) {
+      const text = await resp.text();
+      throw new Error(`Clear all failed: ${resp.status} ${text}`);
+    }
+    // Handle 204 No Content or empty response
+    if (resp.status === 204) {
+      return { success: true, message: "All events cleared successfully" };
+    }
+    const text = await resp.text();
+    return text ? JSON.parse(text) : { success: true };
+  } catch (err) {
+    if (err.message && err.message.includes("Failed to fetch")) {
+      throw new Error(
+        `Backend not reachable. Is the server running on ${getBackendUrl()}?`
+      );
+    }
+    throw err;
+  }
 }
