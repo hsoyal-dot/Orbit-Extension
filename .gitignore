@@ -4,9 +4,5 @@
 # Extension artifacts (documentation only, not needed in store)
 store-assets/
 
-# Guide files (keep only PRIVACY_POLICY.md)
-DEPLOYMENT_GUIDE.md
-PUBLISHING_GUIDE.md
-
 # Logs
 *.log
