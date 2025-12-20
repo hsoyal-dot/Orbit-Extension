@@ -20,8 +20,14 @@ async function initPopup() {
   const exportIcsBtn = $("exportIcsBtn");
   if (exportIcsBtn) exportIcsBtn.addEventListener("click", exportIcs);
 
-  const syncGoogleBtn = $("syncGoogleBtn");
-  if (syncGoogleBtn) syncGoogleBtn.addEventListener("click", syncGoogle);
+  const manageEventsBtn = $("manageEventsBtn");
+  if (manageEventsBtn) manageEventsBtn.addEventListener("click", showSavedEvents);
+
+  const backToMainBtn = $("backToMainBtn");
+  if (backToMainBtn) backToMainBtn.addEventListener("click", showMainView);
+
+  const clearAllBtn = $("clearAllBtn");
+  if (clearAllBtn) clearAllBtn.addEventListener("click", clearAllEvents);
 
   const toggleCapture = $("toggleCapture");
   if (toggleCapture) {
@@ -303,27 +309,129 @@ async function exportIcs() {
   }
 }
 
-// Sync with Google Calendar
-async function syncGoogle() {
-  try {
-    chrome.runtime.sendMessage({ type: "SYNC_GOOGLE" }, (resp) => {
-      if (chrome.runtime.lastError) {
-        console.error("Runtime error:", chrome.runtime.lastError.message);
-        alert("Sync failed: " + chrome.runtime.lastError.message);
-        return;
-      }
-      if (resp && resp.ok) {
-        alert("Synced with Google Calendar");
-      } else {
-        const errorMsg = resp?.err || resp?.reason || "Unknown error";
-        console.error("Sync response error", resp);
-        alert("Sync failed: " + errorMsg);
-      }
-    });
-  } catch (err) {
-    console.error(err);
-    alert("Sync failed: " + (err.message || err));
+// --- Event Management Functions ---
+
+function showMainView() {
+  const mainContainer = document.querySelector(".container");
+  const savedEventsSection = $("savedEventsSection");
+  if (mainContainer) mainContainer.style.display = "block";
+  if (savedEventsSection) savedEventsSection.classList.add("hidden");
+}
+
+function showSavedEvents() {
+  chrome.runtime.sendMessage({ type: "GET_SAVED_EVENTS" }, (resp) => {
+    if (chrome.runtime.lastError) {
+      console.error("Runtime error:", chrome.runtime.lastError.message);
+      alert("Failed to fetch events: " + chrome.runtime.lastError.message);
+      return;
+    }
+    if (resp && resp.ok) {
+      renderSavedEventsList(resp.data || []);
+      // Switch to saved events view
+      const mainContainer = document.querySelector(".container");
+      const savedEventsSection = $("savedEventsSection");
+      if (mainContainer) mainContainer.style.display = "none";
+      if (savedEventsSection) savedEventsSection.classList.remove("hidden");
+    } else {
+      const errorMsg = resp?.err || resp?.reason || "Unknown error";
+      console.error("Fetch events error", resp);
+      alert("Failed to fetch events: " + errorMsg);
+    }
+  });
+}
+
+function renderSavedEventsList(events) {
+  const container = $("savedEventsList");
+  if (!container) return;
+  
+  container.innerHTML = "";
+  
+  if (!events || events.length === 0) {
+    container.innerHTML = '<div class="empty">No saved events on server.</div>';
+    return;
   }
+  
+  events.forEach((event) => {
+    const card = document.createElement("div");
+    card.className = "detected-card";
+    
+    const title = document.createElement("div");
+    title.className = "detected-title";
+    title.textContent = event.title || "Untitled Event";
+    
+    const meta = document.createElement("div");
+    meta.className = "detected-meta";
+    meta.textContent = `${event.date || "No date"} ${event.time || ""} • ${event.tag || "Uncategorized"}`;
+    
+    const actions = document.createElement("div");
+    actions.className = "detected-actions";
+    
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "Delete";
+    deleteBtn.className = "delete-btn";
+    deleteBtn.addEventListener("click", () => deleteSavedEvent(event.id));
+    
+    const openBtn = document.createElement("button");
+    openBtn.textContent = "Open";
+    openBtn.addEventListener("click", () => {
+      if (event.url) chrome.tabs.create({ url: event.url });
+    });
+    
+    actions.appendChild(openBtn);
+    actions.appendChild(deleteBtn);
+    
+    const snippet = document.createElement("pre");
+    snippet.className = "detected-snippet";
+    snippet.textContent = event.sourceSnippet || "";
+    
+    card.appendChild(title);
+    card.appendChild(meta);
+    card.appendChild(snippet);
+    card.appendChild(actions);
+    
+    container.appendChild(card);
+  });
+}
+
+function deleteSavedEvent(id) {
+  if (!confirm("Delete this event from the server?")) return;
+  
+  chrome.runtime.sendMessage({ type: "DELETE_EVENT", id: id }, (resp) => {
+    if (chrome.runtime.lastError) {
+      console.error("Runtime error:", chrome.runtime.lastError.message);
+      alert("Delete failed: " + chrome.runtime.lastError.message);
+      return;
+    }
+    if (resp && resp.ok) {
+      // Refresh the list
+      showSavedEvents();
+    } else {
+      const errorMsg = resp?.err || resp?.reason || "Unknown error";
+      console.error("Delete error", resp);
+      alert("Delete failed: " + errorMsg);
+    }
+  });
+}
+
+function clearAllEvents() {
+  if (!confirm("Delete ALL saved events from the server? This cannot be undone.")) return;
+  
+  chrome.runtime.sendMessage({ type: "CLEAR_ALL_EVENTS" }, (resp) => {
+    if (chrome.runtime.lastError) {
+      console.error("Runtime error:", chrome.runtime.lastError.message);
+      alert("Clear failed: " + chrome.runtime.lastError.message);
+      return;
+    }
+    if (resp && resp.ok) {
+      alert("All events cleared from server");
+      // Refresh the list
+      showSavedEvents();
+    } else {
+      const errorMsg = resp?.err || resp?.reason || "Unknown error";
+      console.error("Clear all error", resp);
+      alert("Clear failed: " + errorMsg);
+    }
+  });
 }
 
 // --- Start up ---
