@@ -1,47 +1,53 @@
 <!DOCTYPE html>
 <html>
-  <head>
-    <meta charset="utf-8" />
-    <title>Orbit</title>
-    <link rel="stylesheet" href="popup.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h2>Orbit</h2>
-      <label class="switch">
-        <input id="toggleCapture" type="checkbox" />
-        <span class="slider"></span>
-      </label>
-      <span id="status">Idle</span>
 
-      <hr />
+<head>
+  <meta charset="utf-8" />
+  <title>Orbit</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
 
-      <div id="detectedList" class="list"></div>
+<body>
+  <div class="container">
+    <h2>Orbit</h2>
+    <label class="switch">
+      <input id="toggleCapture" type="checkbox" />
+      <span class="slider"></span>
+    </label>
+    <span id="status">Idle</span>
 
-      <div class="controls">
-        <select id="filterSelect">
-          <option value="all">All</option>
-          <option value="Educational">Educational</option>
-          <option value="Personal">Personal</option>
-          <option value="Event">Event</option>
-        </select>
-        <button id="exportIcsBtn">Export ICS</button>
-        <button id="importTabBtn">Import this tab</button>
-        <button id="manageEventsBtn">Manage Events</button>
-      </div>
+    <!-- Helpful hint when idle -->
+    <p id="statusHint" class="status-hint">Enable Orbit to start capturing events</p>
+
+    <hr />
+
+    <div id="detectedList" class="list"></div>
+
+    <div class="controls">
+      <select id="filterSelect">
+        <option value="all">All</option>
+        <option value="Educational">Educational</option>
+        <option value="Personal">Personal</option>
+        <option value="Event">Event</option>
+      </select>
+      <button id="exportIcsBtn">Export ICS</button>
+      <button id="importTabBtn">Import this tab</button>
+      <button id="manageEventsBtn">Manage Events</button>
     </div>
+  </div>
 
-    <!-- Saved Events Management Section -->
-    <div id="savedEventsSection" class="hidden">
-      <h2>Saved Events</h2>
-      <p class="section-subtitle">Events stored on server</p>
-      <div id="savedEventsList" class="list"></div>
-      <div class="controls">
-        <button id="clearAllBtn" class="danger-btn">Clear All Events</button>
-        <button id="backToMainBtn">← Back</button>
-      </div>
+  <!-- Saved Events Management Section -->
+  <div id="savedEventsSection" class="hidden">
+    <h2>Saved Events</h2>
+    <p class="section-subtitle">Events stored on server</p>
+    <div id="savedEventsList" class="list"></div>
+    <div class="controls">
+      <button id="clearAllBtn" class="danger-btn">Clear All Events</button>
+      <button id="backToMainBtn">← Back</button>
     </div>
+  </div>
 
-    <script src="popup.js"></script>
-  </body>
+  <script src="popup.js"></script>
+</body>
+
 </html>
