@@ -4,7 +4,7 @@
  */
 
 const CONFIG = {
-  USE_PRODUCTION: false,
+  USE_PRODUCTION: true,
   PRODUCTION_URL: "https://orbit-extension-production.up.railway.app",
   DEVELOPMENT_URL: "http://localhost:8080"
 };
