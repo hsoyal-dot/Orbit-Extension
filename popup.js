@@ -1,19 +1,14 @@
-/* popup.js
-   - Handles UI for popup.html
-   - Imports current tab (selection or title)
-   - Shows detected events (from chrome.storage.local)
-   - Sends save requests to backend for saved events
-*/
+/**
+ * Popup UI Controller
+ * Manages extension popup interface, event detection, and backend communication
+ */
 
-// Import configuration (backend URL is centralized in config.js)
 // Note: Backend base URL is no longer needed here as background.js handles all API calls
 
 // --- DOM helpers ---
 const $ = (id) => document.getElementById(id);
 
-// Called on popup load
 async function initPopup() {
-  // wire buttons
   const importBtn = $("importTabBtn");
   if (importBtn) importBtn.addEventListener("click", importCurrentTab);
 
@@ -34,11 +29,20 @@ async function initPopup() {
     toggleCapture.addEventListener("change", () => {
       // toggle capturing in storage
       const enabled = toggleCapture.checked;
+      
+      // Add pulsing animation when enabled
+      const slider = document.querySelector(".slider");
+      if (slider && enabled) {
+        slider.classList.add("animate-pulse");
+        setTimeout(() => slider.classList.remove("animate-pulse"), 600);
+      }
+      
       chrome.storage.local.set({ capturing: enabled }, () => {
         renderCaptureToggle(enabled);
         updateStatus(enabled);
+        updateImportButtonVisibility(enabled);
+        updateButtonStates(enabled); // Update all button colors
       });
-      // notify background too
       chrome.runtime.sendMessage({
         type: "TOGGLE_CAPTURE",
         enabled: enabled,
@@ -46,11 +50,16 @@ async function initPopup() {
     });
   }
 
-  // initial render
   renderCaptureToggle();
   updateStatus();
   loadDetectedIntoUI();
-  // also listen for runtime messages (background -> popup)
+  
+  chrome.storage.local.get(["capturing"], (res) => {
+    const enabled = !!res.capturing;
+    updateImportButtonVisibility(enabled);
+    updateButtonStates(enabled);
+  });
+  
   chrome.runtime.onMessage.addListener((msg) => {
     if (msg.type === "NEW_DETECTIONS") {
       renderDetectedList(msg.detected || []);
@@ -85,64 +94,118 @@ function updateStatus(value) {
   statusEl.textContent = value ? "Running" : "Idle";
 }
 
-// --- Import current tab handler (this is the improved piece) ---
+function updateImportButtonVisibility(isCapturing) {
+  const importBtn = $("importTabBtn");
+  if (!importBtn) return;
+  
+  if (isCapturing) {
+    importBtn.classList.remove("hidden");
+  } else {
+    importBtn.classList.add("hidden");
+  }
+}
+
+function updateButtonStates(isCapturing) {
+  const buttons = document.querySelectorAll("button:not(.danger-btn):not(.delete-btn)");
+  const filterSelect = document.getElementById("filterSelect");
+  const statusHint = document.getElementById("statusHint");
+  
+  buttons.forEach(button => {
+    if (isCapturing) {
+      button.classList.add("orbit-active");
+      button.disabled = false;
+      
+      button.classList.add("animate-glow");;
+      setTimeout(() => button.classList.remove("animate-glow"), 800);
+    } else {
+      button.classList.remove("orbit-active");
+      button.disabled = true;
+    }
+  });
+  
+  // Update filter dropdown
+  if (filterSelect) {
+    filterSelect.disabled = !isCapturing;
+  }
+  
+  // Show/hide status hint
+  if (statusHint) {
+    if (isCapturing) {
+      statusHint.classList.add("hidden");
+    } else {
+      statusHint.classList.remove("hidden");
+    }
+  }
+}
+
 async function importCurrentTab() {
   try {
-    const [tab] = await chrome.tabs.query({
-      active: true,
-      currentWindow: true,
-    });
-    if (!tab) return alert("No active tab found");
-
-    // request page selection via scripting.executeScript (runs in page)
-    chrome.scripting.executeScript(
-      {
-        target: { tabId: tab.id },
-        func: () => window.getSelection().toString().trim(),
-      },
-      (results) => {
-        if (chrome.runtime.lastError) {
-          console.error(
-            "executeScript error:",
-            chrome.runtime.lastError.message
-          );
-          alert(
-            "Could not read selection from page: " +
-              chrome.runtime.lastError.message
-          );
-          return;
-        }
-
-        const snippet =
-          results && results[0] && results[0].result ? results[0].result : "";
-        const payload = {
-          url: tab.url,
-          title: tab.title,
-          snippet: snippet || tab.title,
-        };
-
-        // Send to background to perform extraction (background handles sending to backend)
-        chrome.runtime.sendMessage({ type: "IMPORT_PAGE", payload }, (resp) => {
-          if (chrome.runtime.lastError) {
-            console.error(
-              "Runtime error sending message:",
-              chrome.runtime.lastError.message
-            );
-            alert("Import failed: " + chrome.runtime.lastError.message);
-            return;
-          }
-          if (resp && resp.ok) {
-            alert("Imported — check detected list");
-            // refresh UI
-            loadDetectedIntoUI();
-          } else {
-            const errorMsg = resp?.err || resp?.reason || "Unknown error";
-            console.error("Import response error", resp);
-            alert("Import failed: " + errorMsg);
-          }
-        });
+    chrome.storage.local.get(["capturing"], (res) => {
+      const isCapturing = !!res.capturing;
+      
+      if (!isCapturing) {
+        alert("⚠️ Please enable Orbit (toggle to RUNNING) before importing");
+        return;
       }
-    );
+      
+      // Capturing is enabled - proceed with import
+      chrome.tabs.query({
+        active: true,
+        currentWindow: true,
+      }, ([tab]) => {
+        if (!tab) return alert("No active tab found");
+
+        // request page selection via scripting.executeScript (runs in page)
+        chrome.scripting.executeScript(
+          {
+            target: { tabId: tab.id },
+            func: () => window.getSelection().toString().trim(),
+          },
+          (results) => {
+            if (chrome.runtime.lastError) {
+              console.error(
+                "executeScript error:",
+                chrome.runtime.lastError.message
+              );
+              alert(
+                "Could not read selection from page: " +
+                  chrome.runtime.lastError.message
+              );
+              return;
+            }
+
+            const snippet =
+              results && results[0] && results[0].result ? results[0].result : "";
+            const payload = {
+              url: tab.url,
+              title: tab.title,
+              snippet: snippet || tab.title,
+            };
+
+            // Send to background to perform extraction (background handles sending to backend)
+            chrome.runtime.sendMessage({ type: "IMPORT_PAGE", payload }, (resp) => {
+              if (chrome.runtime.lastError) {
+                console.error(
+                  "Runtime error sending message:",
+                  chrome.runtime.lastError.message
+                );
+                alert("Import failed: " + chrome.runtime.lastError.message);
+                return;
+              }
+              if (resp && resp.ok) {
+                alert("Imported — check detected list");
+                // refresh UI
+                loadDetectedIntoUI();
+              } else {
+                const errorMsg = resp?.err || resp?.reason || "Unknown error";
+                console.error("Import response error", resp);
+                alert("Import failed: " + errorMsg);
+              }
+            });
+          }
+        );
+      });
+    });
   } catch (err) {
     console.error(err);
     alert("Import failed: " + (err && err.message ? err.message : err));

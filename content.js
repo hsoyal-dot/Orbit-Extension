@@ -1,4 +1,8 @@
-// content.js - listens for selection or page metadata and sends message to background
+/**
+ * Content Script for Orbit Extension
+ * Handles page-level event capture via keyboard shortcut and visual feedback
+ */
+
 (function () {
   // Inject styles for the glow effect
   function injectGlowStyles() {
@@ -61,37 +65,41 @@
     return body.slice(0, 1200);
   }
 
-  // Shortcut: Ctrl+Shift+Y to capture selection
   document.addEventListener("keydown", (e) => {
     if (e.ctrlKey && e.shiftKey && e.key === "Y") {
-      e.preventDefault(); // Prevent any default browser behavior
+      e.preventDefault();
       
-      const payload = captureSelection();
-      if (!payload) {
-        // Show glow effect even when no text is selected (as feedback)
+      chrome.storage.local.get(["capturing"], (res) => {
+        const isCapturing = !!res.capturing;
+        if (!isCapturing) {
+          console.log("Orbit is IDLE - capture disabled for security");
+          return;
+        }
+        
+        const payload = captureSelection();
+        if (!payload) {
+          injectGlowStyles();
+          document.body.classList.add("orbit-glow-active");
+          setTimeout(() => {
+            document.body.classList.remove("orbit-glow-active");
+          }, 1500);
+          return;
+        }
+        
         injectGlowStyles();
         document.body.classList.add("orbit-glow-active");
+        
         setTimeout(() => {
           document.body.classList.remove("orbit-glow-active");
         }, 1500);
-        return;
-      }
-      
-      // Add glow effect to the page
-      injectGlowStyles();
-      document.body.classList.add("orbit-glow-active");
-      
-      // Remove the class after animation completes
-      setTimeout(() => {
-        document.body.classList.remove("orbit-glow-active");
-      }, 1500);
-      
-      chrome.runtime.sendMessage({ type: "PAGE_CAPTURE", payload }, (resp) => {
-        if (chrome.runtime.lastError) {
-          console.error("Error sending message:", chrome.runtime.lastError);
-          return;
-        }
-        console.log("Capture result", resp);
+        
+        chrome.runtime.sendMessage({ type: "PAGE_CAPTURE", payload }, (resp) => {
+          if (chrome.runtime.lastError) {
+            console.error("Error sending message:", chrome.runtime.lastError);
+            return;
+          }
+          console.log("Capture successful", resp);
+        });
       });
     }
   });

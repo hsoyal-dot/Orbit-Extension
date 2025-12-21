@@ -4,12 +4,5 @@
 # Extension artifacts (documentation only, not needed in store)
 store-assets/
 
-# Backend folder (deploy separately)
-orbit-backend/
-
-# Guide files (keep only PRIVACY_POLICY.md)
-DEPLOYMENT_GUIDE.md
-PUBLISHING_GUIDE.md
-
 # Logs
 *.log

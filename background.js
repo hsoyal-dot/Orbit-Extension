@@ -1,8 +1,10 @@
-// background.js (MV3 service worker)
+/**
+ * Service Worker for Orbit Chrome Extension
+ * Handles backend communication and message routing
+ */
 
-// Configuration - Update USE_PRODUCTION and PRODUCTION_URL before publishing
 const CONFIG = {
-  USE_PRODUCTION: false, // Set to true for Chrome Web Store release
+  USE_PRODUCTION: false,
   PRODUCTION_URL: "https://orbit-extension-production.up.railway.app",
   DEVELOPMENT_URL: "http://localhost:8080"
 };
