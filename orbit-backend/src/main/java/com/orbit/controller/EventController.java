@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api")
@@ -30,8 +31,19 @@ public class EventController {
 
     @DeleteMapping("/events/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        if (!repo.existsById(id)) return ResponseEntity.notFound().build();
+        if (!repo.existsById(id))
+            return ResponseEntity.notFound().build();
         repo.deleteById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/events/clear")
+    public ResponseEntity<?> clearAll() {
+        long count = repo.count();
+        repo.deleteAll();
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "message", "All events cleared",
+                "count", count));
     }
 }
