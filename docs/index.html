@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Privacy Policy - Orbit Extension</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        h1 {
+            color: #06b6d4;
+            border-bottom: 2px solid #06b6d4;
+            padding-bottom: 10px;
+        }
+
+        h2 {
+            color: #0891b2;
+            margin-top: 30px;
+        }
+
+        h3 {
+            color: #0e7490;
+        }
+
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+
+        .last-updated {
+            color: #666;
+            font-style: italic;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Privacy Policy - Orbit Extension</h1>
+    <p class="last-updated">Last Updated: December 22, 2024</p>
+
+    <h2>Introduction</h2>
+    <p>Orbit ("the Extension") is committed to protecting your privacy. This Privacy Policy explains how we handle your
+        data when you use our Chrome extension.</p>
+
+    <h2>Data Collection and Usage</h2>
+
+    <h3>What We Collect</h3>
+    <p>The Extension collects only the following data:</p>
+    <ul>
+        <li><strong>Website Content</strong>: When you enable the Extension and use the "Import this tab" feature or
+            keyboard shortcut (Ctrl+Shift+Y), we temporarily capture:
+            <ul>
+                <li>Selected text or page title</li>
+                <li>URL of the current webpage</li>
+                <li>Detected event information (dates, titles, descriptions)</li>
+            </ul>
+        </li>
+        <li><strong>User Preferences</strong>: Your capture toggle state (ON/OFF) is stored locally in your browser.
+        </li>
+    </ul>
+
+    <h3>How We Use Your Data</h3>
+    <ul>
+        <li>Event data is sent to your configured backend server for storage and management</li>
+        <li>Data is used solely to provide the event capture and calendar export functionality</li>
+        <li>No data is collected when the Extension is disabled (toggle OFF)</li>
+    </ul>
+
+    <h2>Data Storage</h2>
+    <ul>
+        <li><strong>Local Storage</strong>: Toggle state and temporary event cache are stored in Chrome's local storage
+        </li>
+        <li><strong>Backend Server</strong>: Event data is sent to the backend API server you configure (default:
+            <code>https://orbit-extension-production.up.railway.app</code>)</li>
+    </ul>
+
+    <h2>Data Sharing</h2>
+    <p>We do <strong>not</strong>:</p>
+    <ul>
+        <li>Sell or transfer your data to third parties</li>
+        <li>Use your data for purposes unrelated to the Extension's functionality</li>
+        <li>Share your data with advertisers or analytics services</li>
+        <li>Track your browsing activity</li>
+    </ul>
+
+    <h2>Data Security</h2>
+    <ul>
+        <li>Data transmission to the backend server uses HTTPS encryption</li>
+        <li>No data is captured when the Extension is disabled</li>
+        <li>Event data is stored securely on the backend server</li>
+    </ul>
+
+    <h2>Permissions Explanation</h2>
+    <p>The Extension requests the following permissions:</p>
+    <ul>
+        <li><strong>activeTab</strong>: To read the current tab's URL and title for event metadata</li>
+        <li><strong>scripting</strong>: To inject content script for text selection capture via keyboard shortcut</li>
+        <li><strong>storage</strong>: To save toggle state and detected events locally</li>
+        <li><strong>notifications</strong>: To provide visual feedback when events are captured or exported</li>
+        <li><strong>Host Permission (https://*/)</strong>: To access web page content for event detection and
+            communicate with the backend API</li>
+    </ul>
+
+    <h2>User Control</h2>
+    <p>You have full control over your data:</p>
+    <ul>
+        <li>Disable the Extension at any time by toggling OFF</li>
+        <li>Delete saved events through the "Manage Events" interface</li>
+        <li>Clear all events using the "Clear All Events" button</li>
+        <li>Uninstall the Extension to remove all local data</li>
+    </ul>
+
+    <h2>Children's Privacy</h2>
+    <p>The Extension is not intended for use by children under 13. We do not knowingly collect data from children.</p>
+
+    <h2>Changes to This Policy</h2>
+    <p>We may update this Privacy Policy from time to time. Updates will be reflected in the "Last Updated" date above.
+    </p>
+
+    <h2>Contact</h2>
+    <p>For questions about this Privacy Policy, please contact us via our <a
+            href="https://github.com/hsoyal-dot/Orbit-Extension">GitHub repository</a>.</p>
+
+    <h2>Open Source</h2>
+    <p>Orbit is an open-source project. You can review our code and data handling practices on <a
+            href="https://github.com/hsoyal-dot/Orbit-Extension">GitHub</a>.</p>
+</body>
+
+</html>
