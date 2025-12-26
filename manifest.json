@@ -10,7 +10,6 @@
     },
     "permissions": [
       "storage",
-      "notifications",
       "scripting",
       "activeTab"
     ],
