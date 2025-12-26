@@ -80,7 +80,6 @@ You have the right to:
 Orbit requires the following Chrome permissions:
 
 - **storage**: Store detected events locally in your browser
-- **notifications**: Send notifications about captured events (optional feature)
 - **scripting**: Inject content scripts to enable keyboard shortcuts for event capture
 - **activeTab**: Access the current tab's content when you explicitly trigger event capture
 - **host_permissions (https://\*/)**: Access webpage content to extract event information when you use the extension
